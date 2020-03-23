@@ -40,7 +40,7 @@ for line in f:
 
     addToTable(DnsTable, h, i, fl)
 
-#test
+#testi testin test
 
 
 f.close()
