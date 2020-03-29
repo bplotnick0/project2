@@ -42,7 +42,7 @@ for line in f:
 
 #testi testin test
 
-#new pc
+#desktop
 f.close()
 
 
