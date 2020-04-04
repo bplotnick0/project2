@@ -39,10 +39,7 @@ for line in f:
     fl = line[2]
 
     addToTable(DnsTable, h, i, fl)
-
-
-
-
+    
 f.close()
 
 
