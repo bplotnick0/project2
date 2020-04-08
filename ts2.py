@@ -46,4 +46,29 @@ for line in f:
 f.close()
 
 
+def searchname(data, sckt):
+    for entry in DnsTable:
+        if (entry.hostName).strip() == data.strip():
+            print((entry.hostName).strip() == data.strip())
+            string = (entry.hostName + " " + entry.IP + " " + entry.Flag).strip()
+            sckt.send(string.encode('utf-8'))
+            return
+    
+
+
 ###################################################################################################################################
+
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)         # Create a socket object
+# port = int(lslistenport)
+
+client.bind(('', 5003))        # Bind to the port
+client.listen(5)                 # Now wait for client connection.
+c, addr = client.accept()     # Establish connection with client.
+print("connected")
+while True:
+    hstnme = c.recv(100).decode('utf-8')
+    searchname(hstnme, c)
+    print(hstnme)
+    if not hstnme:
+        break
+c.close()   

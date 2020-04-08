@@ -5,82 +5,62 @@ import select
 
 
 #read in ports/hostnames
-lslistenport = sys.argv[1]
-ts1hostname = sys.argv[2]
-ts1listenport = sys.argv[3]
-ts2hostname = sys.argv[4]
-ts2listenport = sys.argv[5]
+lslistenport = int(sys.argv[1])
+ts1hostname = int(sys.argv[2])
+ts1listenport = int(sys.argv[3])
+ts2hostname = int(sys.argv[4])
+ts2listenport = int(sys.argv[5])
+host = socket.gethostname()
 
+ts1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
+ts2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
+ts1.connect((ts1hostname, ts1listenport))
+ts2.connect((ts2hostname, ts2listenport))
 
-
-
-
+ts1notfound = False
 def sendhostnme(hstnme, clientsckt):
-#connect to ts1 and ts2
-    ts1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    ts2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    ts1.connect(ts1hostname, ts1listenport)
-    ts2.connect(ts2hostname, ts2listenport)
-
+    
     ts1.send(hstnme)
     ts2.send(hstnme)
 
-    ts1.settimeout(5000)
-    ts2.settimeout(5000)
+    ts1.settimeout(5.0)
+    ts2.settimeout(5.0)
+
+    try:
+        print("ts1 try")
+        ts1data = ts1.recv(1024).decode('utf-8')
+        print(ts1data)
+
+        if not ts1data:
+            pass
+        else:
+            clientsckt.send(ts1data.encode('utf-8'))
+            return
+    except socket.timeout:
+        print("no response")
+        ts1notfound = True
+  
+        
+    try:
+        print("ts2 try")
+        ts2data = ts2.recv(1024).decode('utf-8')
+        print(ts2data)
+
+        if not ts2data:
+            pass
+        else:
+            clientsckt.send(ts2data.encode('utf-8'))
+            return
+    except socket.timeout:
+        if ts1notfound == True:
+            errorstr =  (hstnme.decode('utf-8').strip()  + ' - Error:HOST NOT FOUND').strip()
+            print(errorstr)
+            clientsckt.send(errorstr.encode('utf-8'))
+            ts1notfound = False
+
+     
 
 
-    data = [ ts1.recv(1024),
-    ts2.recv(1024)]
-
-
-
-
-#send hstnme to both ts1 and ts2
-
-#get response 
-    #if(time > 5000ms):
-        #send error string
-    #else:
-        #send received string
-
-
-
-
-
-
-messages = [ 'This is the message. ',
-             'It will be sent ',
-             'in parts.',
-             ]
-server_address = ('localhost', 10000)
-
-# Create a TCP/IP socket
-socks = [ socket.socket(socket.AF_INET, socket.SOCK_STREAM),
-          socket.socket(socket.AF_INET, socket.SOCK_STREAM),
-          ]
-
-# Connect the socket to the port where the server is listening
-print >>sys.stderr, 'connecting to %s port %s' % server_address
-for s in socks:
-    s.connect(server_address)
-
-
-
-for message in messages:
-
-    # Send messages on both sockets
-    for s in socks:
-        print >>sys.stderr, '%s: sending "%s"' % (s.getsockname(), message)
-        s.send(message)
-
-    # Read responses on both sockets
-    for s in socks:
-        data = s.recv(1024)
-        print >>sys.stderr, '%s: received "%s"' % (s.getsockname(), data)
-        if not data:
-            print >>sys.stderr, 'closing socket', s.getsockname()
-            s.close()
 
 
 
@@ -89,15 +69,16 @@ for message in messages:
 
 
 # connect to client
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)         # Create a socket object
-port = int(lslistenport)
-print(port)
-s.bind(('', port))        # Bind to the port
-s.listen(5)                 # Now wait for client connection.
-c, addr = s.accept()     # Establish connection with client.
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)         # Create a socket object
+# port = int(lslistenport)
+# print(port)
+client.bind(('', lslistenport))        # Bind to the port
+client.listen(5)                 # Now wait for client connection.
+c, addr = client.accept()     # Establish connection with client.
 print("connected")
 while True:
     hstnme = c.recv(100)
+    print(hstnme)
     sendhostnme(hstnme, c)
     if not hstnme:
         break
